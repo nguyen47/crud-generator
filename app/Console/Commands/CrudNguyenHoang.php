@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
+use DB;
 
 class CrudNguyenHoang extends Command
 {
@@ -45,14 +46,130 @@ class CrudNguyenHoang extends Command
         $this->model($name);
         $this->info('Created Model !');
         $this->indexView($name);
-        $this->info('Created Index !');
+        $this->info('Created View Index !');
 
         File::append(base_path('routes/web.php'), 'Route::resource(\'' . str_plural(strtolower($name)) . "', '{$name}Controller');");
     }
 
     /**
-     * Get template fromm folder stubs
-     * @param  [type] $type Stubs Type
+     * Get all colums in database
+     * @param  [type] $tablename Table's name
+     */
+    protected function getColumns($tablename) {
+        $dbType = DB::getDriverName();
+        $cols = DB::select("show columns from " . $tablename);
+        $ret = [];
+        foreach ($cols as $c) {
+            $field = isset($c->Field) ? $c->Field : $c->field;
+            $type = isset($c->Type) ? $c->Type : $c->type;
+            $cadd = [];
+            $cadd['name'] = $field;
+            $cadd['type'] = $field == 'id' ? 'id' : $this->getTypeFromDBType($type);
+            $cadd['display'] = ucwords(str_replace('_', ' ', $field));
+            $ret[] = $cadd;
+        }
+        return $ret;
+    }
+
+
+    /**
+     * Get type of each colums
+     * @param  [type] $dbtype Type's database
+     */
+    protected function getTypeFromDBType($dbtype) {
+        if(str_contains($dbtype, 'varchar')) { return 'text'; }
+        if(str_contains($dbtype, 'int') || str_contains($dbtype, 'float')) { return 'number'; }
+        if(str_contains($dbtype, 'date')) { return 'date'; }
+        return 'unknown';
+    }
+
+
+    /**
+     * Render data with owns format
+     * @param  [type] $data Data of template
+     */
+    protected function renderWithData($data) {
+        $template = $this->getStub('index');
+        $template = $this->renderForeachs($template, $data);
+        $template = $this->renderIFs($template, $data);
+        $template = $this->renderVariables($template, $data);
+        return $template;
+    }
+
+    /**
+     * Render Foreach base on format [[foreach]]
+     * @param  [type] $template Template from getStub
+     * @param  [type] $data     Data of template
+     */
+    protected function renderForeachs($template, $data) {
+        $callback = function ($matches) use($data) {
+            $rep = $matches[0];
+            $rep = preg_replace('/\[\[\s*foreach:\s*(.+?)\s*\]\](\r?\n)?/s', '', $rep);
+            $rep = preg_replace('/\[\[\s*endforeach\s*\]\](\r?\n)?/s', '', $rep);
+            $ret = '';
+            if(array_key_exists($matches[1], $data) && is_array($data[$matches[1]])) {
+                $parent = $data[$matches[1]];
+                foreach ($parent as $i) {
+                    $d = [];
+                    if(is_array($i)) {
+                        foreach ($i as $key => $value) {
+                            $d['i.'.$key] = $value;
+                        }
+                    }
+                    else {
+                        $d['i'] = $i;
+                    }
+                    $rep2 = $this->renderIFs($rep, array_merge($d, $data));
+                    $rep2 = $this->renderVariables($rep2, array_merge($d, $data));
+                    $ret .= $rep2;
+                }
+                return $ret;
+            }
+            else {
+                return $mat;    
+            }
+            
+        };
+        $template = preg_replace_callback('/\[\[\s*foreach:\s*(.+?)\s*\]\](\r?\n)?((?!endforeach).)*\[\[\s*endforeach\s*\]\](\r?\n)?/s', $callback, $template);
+        return $template;
+    }
+
+    /**
+     * Render variable
+     * @param  [type] $template Template from getStub
+     * @param  [type] $data     Data of template
+     */
+    protected function renderVariables($template, $data) {
+        $callback = function ($matches) use($data) {
+            if(array_key_exists($matches[1], $data)) {
+                return $data[$matches[1]];
+            }
+            return $matches[0];
+        };
+        $template = preg_replace_callback('/\[\[\s*(.+?)\s*\]\](\r?\n)?/s', $callback, $template);
+        return $template;
+    }
+
+    protected function renderIFs($template, $data) {
+        $callback = function ($matches) use($data) {
+            $rep = $matches[0];
+            $rep = preg_replace('/\[\[\s*if:\s*(.+?)\s*([!=]=)\s*(.+?)\s*\]\](\r?\n)?/s', '', $rep);
+            $rep = preg_replace('/\[\[\s*endif\s*\]\](\r?\n)?/s', '', $rep);
+            $ret = '';
+            $val1 = $this->getValFromExpression($matches[1], $data);
+            $val2 = $this->getValFromExpression($matches[3], $data);
+            if($matches[2] == '==' && $val1 == $val2) { $ret .= $rep; }
+            if($matches[2] == '!=' && $val1 != $val2) { $ret .= $rep; }
+            
+            return $ret;
+        };
+        $template = preg_replace_callback('/\[\[\s*if:\s*(.+?)\s*([!=]=)\s*(.+?)\s*\]\](\r?\n)?((?!endif).)*\[\[\s*endif\s*\]\](\r?\n)?/s', $callback, $template);
+        return $template;
+    }
+
+    /**
+     * Load template
+     * @param  [type] $type Type of template. Ex: model, controller, index, ...
      * @return [type]       [description]
      */
     protected function getStub($type)
@@ -60,6 +177,10 @@ class CrudNguyenHoang extends Command
         return file_get_contents(resource_path("stubs/$type.stub"));
     }
 
+    /**
+     * Create Model
+     * @param  [type] $name Model's Name
+     */
     protected function model($name)
     {
         $modelTemplate = str_replace(
@@ -71,6 +192,11 @@ class CrudNguyenHoang extends Command
         file_put_contents(app_path("/{$name}.php"), $modelTemplate);
     }
 
+    /**
+     * Create Controller
+     * @param  [type] $name Model's name
+     * @return [type]       [description]
+     */
     protected function controller($name)
     {
         $controllerTemplate = str_replace(
@@ -90,25 +216,18 @@ class CrudNguyenHoang extends Command
         file_put_contents(app_path("/Http/Controllers/{$name}Controller.php"), $controllerTemplate);
     }
 
+    /**
+     * Create Index View
+     * @param  [type] $name Model's Name
+     */
     protected function indexView($name){
-        $indexTemplate = str_replace(
-            [
-                '{{modelName}}',
-                '{{modelNamePluralLowerCase}}',
-                '{{modelNameSingularLowerCase}}'
-            ],
-            [
-                $name,
-                strtolower(str_plural($name)),
-                strtolower($name)
-            ],
-            $this->getStub('index')
-        );
-        if (!file_exists(base_path().'/resources/views/'.strtolower(str_plural($name)))) {
-            mkdir(base_path().'/resources/views/'.strtolower(str_plural($name))); 
-        }
-        
-        fopen(base_path().'/resources/views/'.strtolower(str_plural($name)).'/index.blade.php', 'w');
-        file_put_contents(base_path().'/resources/views/'.strtolower(str_plural($name)).'/index.blade.php', $indexTemplate);   
+        $options = [];
+        $columns = $this->getColumns(strtolower($name));
+        $options['columns'] = $columns;
+        $options['first_column_nonid'] = count($columns) > 1 ? $columns[1]['name'] : '';
+        $options['num_columns'] = count($columns);
+
+        $c = $this->renderWithData($options);
+        file_put_contents(base_path().'/resources/views/'.strtolower(str_plural($name)).'/index.blade.php', $c);
     }
 }

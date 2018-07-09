@@ -1,5 +1,3 @@
-{{modelName}}
-<br>
-{{modelNamePluralLowerCase}}
-<br>
-{{modelNameSingularLowerCase}}
+[[foreach:columns]]
+<p>[[i.name]]</p>
+[[endforeach]]

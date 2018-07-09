@@ -57,7 +57,7 @@ class CrudNguyenHoang extends Command
      */
     protected function getColumns($tablename) {
         $dbType = DB::getDriverName();
-        $cols = DB::select("show columns from " . $tablename);
+        $cols = DB::select("show columns from " . str_plural($tablename));
         $ret = [];
         foreach ($cols as $c) {
             $field = isset($c->Field) ? $c->Field : $c->field;
@@ -228,6 +228,27 @@ class CrudNguyenHoang extends Command
         $options['num_columns'] = count($columns);
 
         $c = $this->renderWithData($options);
+        
+        if (!file_exists(base_path().'/resources/views/'.strtolower(str_plural($name)))) {
+            mkdir(base_path().'/resources/views/'.strtolower(str_plural($name))); 
+        }
+
         file_put_contents(base_path().'/resources/views/'.strtolower(str_plural($name)).'/index.blade.php', $c);
+
+        $indexTemplate = str_replace(
+            [
+                '{{modelName}}',
+                '{{modelNamePluralLowerCase}}',
+                '{{modelNameSingularLowerCase}}'
+            ],
+            [
+                $name,
+                strtolower(str_plural($name)),
+                strtolower($name)
+            ],
+            file_get_contents(base_path().'/resources/views/'.strtolower(str_plural($name)).'/index.blade.php')
+        );
+
+        file_put_contents(base_path().'/resources/views/'.strtolower(str_plural($name)).'/index.blade.php', $indexTemplate);
     }
 }

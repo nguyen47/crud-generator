@@ -2,7 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\{{modelName}}Request;
+use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 use App\{{modelName}};
 
 class {{modelName}}Controller extends Controller
@@ -29,7 +30,7 @@ class {{modelName}}Controller extends Controller
     {
         ${{modelNameSingularLowerCase}} = {{modelName}}::findOrFail($id);
         
-        return view('{{modelNamePluralLowerCase}}.edit', compact('{{modelNameSingularLowerCase}}'));
+        return view('{{modelNamePluralLowerCase}}.show', compact('{{modelNameSingularLowerCase}}'));
     }
 
     public function edit($id)
@@ -38,7 +39,7 @@ class {{modelName}}Controller extends Controller
         return view('{{modelNamePluralLowerCase}}.edit', compact('{{modelNameSingularLowerCase}}'));
     }
 
-    public function update({{modelName}}Request $request, $id)
+    public function update(Request $request, $id)
     {
         ${{modelNameSingularLowerCase}} = {{modelName}}::findOrFail($id);
         ${{modelNameSingularLowerCase}}->update($request->all());

@@ -2,7 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\UserRequest;
+use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 use App\User;
 
 class UserController extends Controller
@@ -29,7 +30,7 @@ class UserController extends Controller
     {
         $user = User::findOrFail($id);
         
-        return view('users.edit', compact('user'));
+        return view('users.show', compact('user'));
     }
 
     public function edit($id)
@@ -38,7 +39,7 @@ class UserController extends Controller
         return view('users.edit', compact('user'));
     }
 
-    public function update(UserRequest $request, $id)
+    public function update(Request $request, $id)
     {
         $user = User::findOrFail($id);
         $user->update($request->all());

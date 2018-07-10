@@ -17,6 +17,12 @@
               </div>
               <!-- /.panel-heading -->
               <div class="panel-body">
+              <p>
+                <a href="{{route('users.create')}}" class="btn btn-primary">
+                    <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                    <span><strong>Add New</strong></span>            
+                </a>
+              </p>
                   <table width="100%" class="table table-striped table-bordered table-hover" id="dataTables-example">
                       <thead>
                           <tr>
@@ -41,11 +47,11 @@
                                                           <td>{{$user->created_at}}</td>
                                                           <td>{{$user->updated_at}}</td>
                                                         <td>
-                                <a href="#" class="btn btn-primary a-btn-slide-text">
+                                <a href="{{route('users.edit', $user->id)}}" class="btn btn-primary a-btn-slide-text">
                                     <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
                                     <span><strong>Edit</strong></span>            
                                 </a>
-                                <a href="#" class="btn btn-primary a-btn-slide-text">
+                                <a href="{{route('users.show', $user->id)}}" class="btn btn-primary a-btn-slide-text">
                                     <span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span>
                                     <span><strong>View</strong></span>            
                                 </a>

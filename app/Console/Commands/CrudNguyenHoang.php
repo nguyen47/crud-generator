@@ -56,6 +56,12 @@ class CrudNguyenHoang extends Command
         $this->CreateView($name);
         $this->info('Created View Create !');
 
+        $this->editView($name);
+        $this->info('Created View Edit !');
+
+        $this->showView($name);
+        $this->info('Created View Show !');
+
         $this->appendRoute($name);
         $this->info('Created '. $name .' Route');
     }
@@ -337,4 +343,69 @@ class CrudNguyenHoang extends Command
 
         file_put_contents(base_path().'/resources/views/'.strtolower(str_plural($name)).'/create.blade.php', $indexTemplate);
     }
+
+    protected function editView($name){
+        $options = [];
+        $columns = $this->getColumns(strtolower($name));
+        $options['columns'] = $columns;
+        $options['first_column_nonid'] = count($columns) > 1 ? $columns[1]['name'] : '';
+        $options['num_columns'] = count($columns);
+
+        $dataRendered = $this->renderWithData('edit',$options);
+        
+        if (!file_exists(base_path().'/resources/views/'.strtolower(str_plural($name)))) {
+            mkdir(base_path().'/resources/views/'.strtolower(str_plural($name))); 
+        }
+
+        file_put_contents(base_path().'/resources/views/'.strtolower(str_plural($name)).'/edit.blade.php', $dataRendered);
+
+        $indexTemplate = str_replace(
+            [
+                '{{modelName}}',
+                '{{modelNamePluralLowerCase}}',
+                '{{modelNameSingularLowerCase}}'
+            ],
+            [
+                $name,
+                strtolower(str_plural($name)),
+                strtolower($name)
+            ],
+            file_get_contents(base_path().'/resources/views/'.strtolower(str_plural($name)).'/edit.blade.php')
+        );
+
+        file_put_contents(base_path().'/resources/views/'.strtolower(str_plural($name)).'/edit.blade.php', $indexTemplate);
+    }  
+
+
+    protected function showView($name){
+        $options = [];
+        $columns = $this->getColumns(strtolower($name));
+        $options['columns'] = $columns;
+        $options['first_column_nonid'] = count($columns) > 1 ? $columns[1]['name'] : '';
+        $options['num_columns'] = count($columns);
+
+        $dataRendered = $this->renderWithData('show',$options);
+        
+        if (!file_exists(base_path().'/resources/views/'.strtolower(str_plural($name)))) {
+            mkdir(base_path().'/resources/views/'.strtolower(str_plural($name))); 
+        }
+
+        file_put_contents(base_path().'/resources/views/'.strtolower(str_plural($name)).'/show.blade.php', $dataRendered);
+
+        $indexTemplate = str_replace(
+            [
+                '{{modelName}}',
+                '{{modelNamePluralLowerCase}}',
+                '{{modelNameSingularLowerCase}}'
+            ],
+            [
+                $name,
+                strtolower(str_plural($name)),
+                strtolower($name)
+            ],
+            file_get_contents(base_path().'/resources/views/'.strtolower(str_plural($name)).'/show.blade.php')
+        );
+
+        file_put_contents(base_path().'/resources/views/'.strtolower(str_plural($name)).'/show.blade.php', $indexTemplate);
+    }    
 }

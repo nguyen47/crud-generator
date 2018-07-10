@@ -23,7 +23,8 @@
                                                               <th>Id</th>
                                                               <th>Title</th>
                                                               <th>Description</th>
-                                                        </tr>
+                                                              <th> Action </th>
+                          </tr>
                       </thead>
                       <tbody>
                       @foreach($cars as $car)
@@ -31,7 +32,21 @@
                                                           <td>{{$car->id}}</td>
                                                           <td>{{$car->title}}</td>
                                                           <td>{{$car->description}}</td>
-                                                      </tr>
+                                                        <td>
+                                <a href="#" class="btn btn-primary a-btn-slide-text">
+                                    <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
+                                    <span><strong>Edit</strong></span>            
+                                </a>
+                                <a href="#" class="btn btn-primary a-btn-slide-text">
+                                    <span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span>
+                                    <span><strong>View</strong></span>            
+                                </a>
+                                <a href="#" class="btn btn-danger a-btn-slide-text">
+                                   <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+                                    <span><strong>Delete</strong></span>            
+                                </a>
+                            </td>
+                          </tr>
                       @endforeach
                       </tbody>
                   </table>

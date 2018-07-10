@@ -13,7 +13,7 @@ class CrudNguyenHoang extends Command
      *
      * @var string
      */
-    protected $signature = 'nguyenhoang:crud {name : Class (singular) for example User}';
+    protected $signature = 'make:crud {name : Class (singular) for example User}';
 
     /**
      * The console command description.
@@ -42,10 +42,10 @@ class CrudNguyenHoang extends Command
         $name = $this->argument('name');
 
         $this->controller($name);
-        $this->info('Created Controller !');
+        $this->info('Created '. $name .' Controller !');
 
         $this->model($name);
-        $this->info('Created Model !');
+        $this->info('Created '. $name .' Model !');
 
         $this->layout();
         $this->info('Create Layout for Admin');
@@ -53,8 +53,11 @@ class CrudNguyenHoang extends Command
         $this->indexView($name);
         $this->info('Created View Index !');
 
+        $this->CreateView($name);
+        $this->info('Created View Create !');
+
         $this->appendRoute($name);
-        $this->info('Created Route');
+        $this->info('Created '. $name .' Route');
     }
 
     /**
@@ -104,11 +107,12 @@ class CrudNguyenHoang extends Command
 
 
     /**
-     * Render data with owns format
-     * @param  [type] $data Data of template
+     * Render Data with my format
+     * @param  String $type Stub's Type
+     * @param  String $data Options Data
      */
-    protected function renderWithData($data) {
-        $template = $this->getStub('index');
+    protected function renderWithData($type, $data) {
+        $template = $this->getStub($type);
         $template = $this->renderForeachs($template, $data);
         $template = $this->renderIFs($template, $data);
         $template = $this->renderVariables($template, $data);
@@ -187,6 +191,24 @@ class CrudNguyenHoang extends Command
     }
 
     /**
+     * Get Value from Expression
+     * @param  [type] $exp  [description]
+     * @param  [type] $data [description]
+     * @return [type]       [description]
+     */
+    protected function getValFromExpression($exp, $data) {
+        if(str_contains($exp, "'")) {
+            return trim($exp,"'");    
+        }
+        else {
+            if(array_key_exists($exp, $data)) {
+                return $data[$exp];
+            }
+            else return null;
+        }
+    }
+
+    /**
      * Load template
      * @param  [type] $type Type of template. Ex: model, controller, index, ...
      * @return [type]       [description]
@@ -259,13 +281,13 @@ class CrudNguyenHoang extends Command
         $options['first_column_nonid'] = count($columns) > 1 ? $columns[1]['name'] : '';
         $options['num_columns'] = count($columns);
 
-        $c = $this->renderWithData($options);
+        $dataRendered = $this->renderWithData('index',$options);
         
         if (!file_exists(base_path().'/resources/views/'.strtolower(str_plural($name)))) {
             mkdir(base_path().'/resources/views/'.strtolower(str_plural($name))); 
         }
 
-        file_put_contents(base_path().'/resources/views/'.strtolower(str_plural($name)).'/index.blade.php', $c);
+        file_put_contents(base_path().'/resources/views/'.strtolower(str_plural($name)).'/index.blade.php', $dataRendered);
 
         $indexTemplate = str_replace(
             [
@@ -282,5 +304,37 @@ class CrudNguyenHoang extends Command
         );
 
         file_put_contents(base_path().'/resources/views/'.strtolower(str_plural($name)).'/index.blade.php', $indexTemplate);
+    }
+
+    protected function CreateView($name){
+        $options = [];
+        $columns = $this->getColumns(strtolower($name));
+        $options['columns'] = $columns;
+        $options['first_column_nonid'] = count($columns) > 1 ? $columns[1]['name'] : '';
+        $options['num_columns'] = count($columns);
+
+        $dataRendered = $this->renderWithData('create',$options);
+        
+        if (!file_exists(base_path().'/resources/views/'.strtolower(str_plural($name)))) {
+            mkdir(base_path().'/resources/views/'.strtolower(str_plural($name))); 
+        }
+
+        file_put_contents(base_path().'/resources/views/'.strtolower(str_plural($name)).'/create.blade.php', $dataRendered);
+
+        $indexTemplate = str_replace(
+            [
+                '{{modelName}}',
+                '{{modelNamePluralLowerCase}}',
+                '{{modelNameSingularLowerCase}}'
+            ],
+            [
+                $name,
+                strtolower(str_plural($name)),
+                strtolower($name)
+            ],
+            file_get_contents(base_path().'/resources/views/'.strtolower(str_plural($name)).'/create.blade.php')
+        );
+
+        file_put_contents(base_path().'/resources/views/'.strtolower(str_plural($name)).'/create.blade.php', $indexTemplate);
     }
 }

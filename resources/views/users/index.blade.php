@@ -27,7 +27,8 @@
                                                               <th>Remember Token</th>
                                                               <th>Created At</th>
                                                               <th>Updated At</th>
-                                                        </tr>
+                                                              <th> Action </th>
+                          </tr>
                       </thead>
                       <tbody>
                       @foreach($users as $user)
@@ -39,7 +40,21 @@
                                                           <td>{{$user->remember_token}}</td>
                                                           <td>{{$user->created_at}}</td>
                                                           <td>{{$user->updated_at}}</td>
-                                                      </tr>
+                                                        <td>
+                                <a href="#" class="btn btn-primary a-btn-slide-text">
+                                    <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
+                                    <span><strong>Edit</strong></span>            
+                                </a>
+                                <a href="#" class="btn btn-primary a-btn-slide-text">
+                                    <span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span>
+                                    <span><strong>View</strong></span>            
+                                </a>
+                                <a href="#" class="btn btn-danger a-btn-slide-text">
+                                   <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+                                    <span><strong>Delete</strong></span>            
+                                </a>
+                            </td>
+                          </tr>
                       @endforeach
                       </tbody>
                   </table>

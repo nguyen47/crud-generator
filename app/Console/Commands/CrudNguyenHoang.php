@@ -43,12 +43,31 @@ class CrudNguyenHoang extends Command
 
         $this->controller($name);
         $this->info('Created Controller !');
+
         $this->model($name);
         $this->info('Created Model !');
+
+        $this->layout();
+        $this->info('Create Layout for Admin');
+
         $this->indexView($name);
         $this->info('Created View Index !');
 
-        File::append(base_path('routes/web.php'), 'Route::resource(\'' . str_plural(strtolower($name)) . "', '{$name}Controller');");
+        $this->appendRoute($name);
+        $this->info('Created Route');
+    }
+
+    /**
+     * Adding Route in route.php
+     * @param  [type] $name Model's Name
+     */
+    protected function appendRoute($name){
+        $search = 'Route::resource(\'' .str_plural(strtolower($name)) . "', '{$name}Controller');";
+        $string = file_get_contents(base_path('routes/web.php'));
+        $string = explode("\n", $string);
+        if(!in_array($search, $string)){
+            File::append(base_path('routes/web.php'), 'Route::resource(\'' . str_plural(strtolower($name)) . "', '{$name}Controller');".PHP_EOL);
+        }
     }
 
     /**
@@ -214,6 +233,19 @@ class CrudNguyenHoang extends Command
         );
 
         file_put_contents(app_path("/Http/Controllers/{$name}Controller.php"), $controllerTemplate);
+    }
+
+    /**
+     * Create Layout
+     */
+    protected function layout(){
+        $layoutTemplate = $this->getStub('adminLayouts');
+
+        if (!file_exists(base_path().'/resources/views/layouts/')) {
+            mkdir(base_path().'/resources/views/layouts/');
+        }
+
+        file_put_contents(base_path().'/resources/views/layouts/masterLayout.blade.php', $layoutTemplate);
     }
 
     /**

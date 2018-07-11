@@ -49,8 +49,10 @@ class {{modelName}}Controller extends Controller
 
     public function destroy($id)
     {
-        {{modelName}}::destroy($id);
 
-        return redirect()->route('{{modelNamePluralLowerCase}}.index');
+        ${{modelNameSingularLowerCase}} = {{modelName}}::findOrFail($id);
+        ${{modelNameSingularLowerCase}}->delete();
+
+        return response()->json(${{modelNameSingularLowerCase}});
     }
 }
